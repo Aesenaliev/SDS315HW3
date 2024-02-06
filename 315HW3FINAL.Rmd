@@ -1,0 +1,184 @@
+---
+title: "SDS315 HW3"
+author: "Arthur Esenaliev"
+date: '`r Sys.Date()`'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Arthur Esenaliev
+are2376
+[https://github.com/Aesenaliev/SDS315HW3](https://github.com/Aesenaliev/SDS315HW3)
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+```
+
+```{r include = FALSE, message = F}
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+```
+
+```{r echo = FALSE}
+creat <- read.csv("creatinine.csv")
+```
+
+```{r echo = FALSE, message = F, include = F}
+ggplot(creat) +
+  geom_point(aes(x = age, y = creatclear)) + 
+  geom_smooth(aes(x = age, y = creatclear), method = "lm")
+
+```
+
+## Problem 1
+
+### Part A
+
+```{r echo = FALSE, include = F}
+
+model_creat <- lm(creatclear ~ age, data = creat)
+coef(model_creat)
+
+creat_test <- data.frame(age = c(55))
+creat_test <- creat_test %>%
+  mutate(creat_pred = predict(model_creat, newdata = .))
+```
+
+We should expect the creatine clearance rate of a 55 year old to be 113.723 mL/minute. I determined this from getting the coefficients from the linear model of creatinine clearance rate by age and plugging in 55 to the age. Also, I determined it from the predict function using a new data frame with an age column with a 55 age entry. 
+
+
+### Part B
+
+```{r echo = FALSE, include = F}
+
+coef(model_creat)[2]
+
+```
+
+A one year change in age results is associated with a  ~ -0.620 mL/minute change in creatine clearance rate. So ~ -0.620 mL/minute per year change. I determined this by getting the coefficients from the linear model and getting the slope of the line.
+
+### Part C
+
+```{r echo = FALSE}
+creat_test <- data.frame(age = c(40,60), creatclear = c(135, 112))
+creat_test <- creat_test %>%
+  mutate(creat_pred = predict(model_creat, newdata = .)) %>%
+  mutate(creat_residual = creatclear - creat_pred)
+
+```
+
+The 40 year old has a higher (healthier) creatinine clearance rate for their age because their residual is a larger number than the 60 year old, meaning that the actual creatinine clearance rate is higher than predicted. Tp calculate the residual, I did the actual creatclear minus the predicted creatclear for both people. (actual - predicted). So 135-123.0203=11.979718, and 112-110.6240=1.376035. 11.979718 > 1.376035, so the 40 year olds residual is higher, so they have a higher creatinine clearance rate for their age.
+
+## Problem 2
+
+### Part A
+
+```{r echo = FALSE}
+market <- read.csv("marketmodel.csv")
+
+apple_model <- lm(AAPL ~ SPY, data = market)
+apple_rsq <- rsquared(apple_model)
+
+google_model <- lm(GOOG ~ SPY, data = market)
+google_rsq <- rsquared(google_model)
+
+merck_model <- lm(MRK ~ SPY, data = market)
+merck_rsq <- rsquared(merck_model)
+
+johnson_model <- lm(JNJ ~ SPY, data = market)
+johnson_rsq <- rsquared(johnson_model)
+
+walmart_model <- lm(WMT ~ SPY, data = market)
+walmart_rsq <- rsquared(walmart_model)
+
+target_model <- lm(TGT ~ SPY, data = market)
+target_rsq <- rsquared(target_model)
+
+
+
+```
+
+The "beta" of a stock a the measure of systematic risk. When the market portfolio goes up 1%, beta is the % change in a stocks return. For example if the beta of a certain stock is 0.2, and if the market portfolio goes up 1%, then the return of that stock would increase by 0.2 percentage points. The stocks with a lower than 1.0 beta value have less systematic risk than average and the companies with more than 1.0 beta value have more systematic risk than average. That being said, a beta of 1.2 is more risky than a beta of 0.8, since the market 1% change would only result in 0.8% change in a stock's return. Basically, the beta is the slope that aims to model the rate of return of an individual stock.
+
+
+### Part B
+
+```{r echo = FALSE}
+
+tribble(
+  ~ticker_symbol, ~intercept, ~slope, ~r_squared,
+  "AAPL", round(apple_model$coefficients[1],5), round(apple_model$coefficients[2],3), round(apple_rsq,3),
+  "GOOG", round(google_model$coefficients[1],5), round(google_model$coefficients[2],3), round(google_rsq,3),
+  "MRK", round(merck_model$coefficients[1],5), round(merck_model$coefficients[2],3), round(merck_rsq,3),
+  "JNJ", round(johnson_model$coefficients[1],5), round(johnson_model$coefficients[2],3), round(johnson_rsq,3),
+  "WMT", round(walmart_model$coefficients[1],5), round(walmart_model$coefficients[2],3), round(walmart_rsq,3),
+  "TGT", round(target_model$coefficients[1],5), round(target_model$coefficients[2],3), round(target_rsq,3)
+)
+
+```
+
+The table above shows the slope and intercepts, along with the r squared value for each stock on the return of the S&P 500. The slope shows for every one percent the SPY increases, the stock increases by the slope percentage points. The r squared shows the stock to the SPY, showing the fraction of variation in SPY is predictable in terms of each stock. 
+
+### Part C
+
+The stock with least systematic risk is Walmart, with a slope of 0.519 and the stock with the greatest systematic risk is apple, with a slope of 1.066. 
+
+## Problem 3
+
+### Part A
+
+```{r echo = FALSE, include = F}
+
+covid <- read.csv("covid.csv")
+
+italy_covid = filter(covid, country == "Italy")
+spain_covid = filter(covid, country == "Spain")
+
+
+lm_italy = lm(log(deaths) ~ days_since_first_death, data = italy_covid)
+coef(lm_italy)
+lm_spain = lm(log(deaths) ~ days_since_first_death, data = spain_covid)
+coef(lm_spain)
+
+gr_italy = round(0.183218, 3)
+print(gr_italy)
+
+gr_spain = round(0.2762447, 3)
+print(gr_spain)
+
+dt_italy = round(70/18.3218)
+print(dt_italy)
+
+dt_spain = round(70/27.62447)
+print(dt_spain)
+```
+
+The estimated growth rate is `r gr_italy`, or  18.322%, and the doubling time is `r dt_italy` for Italy.
+
+### Part B
+
+The estimated growth rate is `r gr_spain`, or  27.624%, and the doubling time is `r dt_spain` for Spain.
+
+### Part C
+```{r echo = FALSE}
+ggplot(covid) + geom_line(aes(x = days_since_first_death, y = deaths, col = country)) +
+  xlab("Days Since First Death") +
+  labs(title = "Covid Deaths by days")
+```
+
+Above is the graph showing the COVID deaths since the day of the fist death in two countries, Italy and Spain. The horizontal axis shows the days since the first death and the y axis shows the deaths. The lines are separated based on the country, so pink line is Italy and the blue line is Spain.
+
+## Problem 4
+
+```{r echo = FALSE, include = F}
+
+milk = read.csv("milk.csv")
+lm_milk = lm(log(sales) ~ log(price), data = milk)
+coef(lm_milk)
+```
+The estimated price elasticity of demand for milk is -1.619. To find this, you would log transform the axes. Then you would run a regression model on the log-log scale, and take note of the slope, or beta. The beta, or elasticity, is average % change in y, or sales, is -1.619% for a 1% change in x, or price.
+
